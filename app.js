@@ -1,16 +1,28 @@
+require('dotenv').config();
 const express = require("express");
 const path = require("path");
 const app = express();
-const bodyparser=require("body-parser")
-const mongoose = require('mongoose');
-main().catch(err => console.log(err));
-async function main() {
-    await mongoose.connect('mongodb://127.0.0.1:27017/contactDance');
-    console.log("connected to mongodb")
-}
-const port = 8000;
+const mongoose = require("mongoose");
 
-//define mongoose schema
+// Connect to MongoDB using environment variable
+async function main() {
+    try {
+        if (!process.env.MONGO_URI) {
+            throw new Error("MONGO_URI not defined in .env file");
+        }
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("✅ connected to MongoDB");
+    } catch (err) {
+        console.error("❌ MongoDB connection failed:", err.message);
+    }
+}
+main();
+
+
+// Use dynamic port for Render
+const port = process.env.PORT || 8000;
+
+// Mongoose Schema
 const contactSchema = new mongoose.Schema({
     name: String,
     phone: String,
@@ -18,38 +30,35 @@ const contactSchema = new mongoose.Schema({
     address: String
 });
 
-const Contact = mongoose.model('Contact', contactSchema);
+const Contact = mongoose.model("Contact", contactSchema);
 
-
-//EXPRESS SPECIFIC STUFF
-app.use('/static', express.static('static'));//for serving static files
+// Express Setup
+app.use("/static", express.static("static"));
 app.use(express.urlencoded({ extended: true }));
 
-//PUG SPECIFIC STUFF
-app.set('view engine', 'pug');//set template engine as pug
-app.set('views', path.join(__dirname, 'views'));//set the views directory
+// Pug Setup
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
 
-//ENDPOINTS
-app.get('/', (req, res) => {
-    const params = {};
-    res.status(200).render('home.pug', params);
+// Routes
+app.get("/", (req, res) => {
+    res.status(200).render("home.pug");
 });
 
-app.get('/contact', (req, res) => {
-    const params = {};
-    res.status(200).render('contact.pug', params);
+app.get("/contact", (req, res) => {
+    res.status(200).render("contact.pug");
 });
-app.post('/contact', (req, res) => {
-    const myData=new Contact(req.body);
-    myData.save().then(()=>{
-        res.send("item has saved to database")
-    }).catch(()=>{
-        res.status(400).send("item was not saved to database")
+
+app.post("/contact", (req, res) => {
+    const myData = new Contact(req.body);
+    myData.save().then(() => {
+        res.send("Item has been saved to the database");
+    }).catch(() => {
+        res.status(400).send("Item was not saved to the database");
     });
-    // res.status(200).render('contact.pug');
 });
 
-//start the server
+// Start Server
 app.listen(port, () => {
-    console.log(`✅ this application is running on port ${port}`);
+    console.log(`✅ Application running on port ${port}`);
 });
