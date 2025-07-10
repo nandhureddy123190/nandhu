@@ -49,13 +49,25 @@ app.get("/contact", (req, res) => {
     res.status(200).render("contact.pug");
 });
 
-app.post("/contact", (req, res) => {
-    const myData = new Contact(req.body);
-    myData.save().then(() => {
-        res.send("Item has been saved to the database");
-    }).catch(() => {
-        res.status(400).send("Item was not saved to the database");
-    });
+// app.post("/contact", (req, res) => {
+//     const myData = new Contact(req.body);
+//     myData.save().then(() => {
+//         res.send("Item has been saved to the database");
+//     }).catch(() => {
+//         res.status(400).send("Item was not saved to the database");
+//     });
+// });
+
+app.post("/contact", async (req, res) => {
+  const myData = new Contact(req.body);
+  try {
+    const saved = await myData.save();
+    console.log("✅ Saved document:", saved);
+    res.send("Item has been saved to the database");
+  } catch (error) {
+    console.error("❌ Save error:", error);
+    res.status(400).send("Item was not saved. Error: " + error.message);
+  }
 });
 
 // Start Server
